@@ -67,7 +67,7 @@ def plot_pace(data, mine):
     x = ["Km. 2,5 Minutos", "Km. 5 Minutos", "Km. 7,5 Minutos"]
     df = data[x].melt()
     pal = sns.cubehelix_palette(3, rot=-.25, light=.7)
-    g = sns.FacetGrid(df, row="variable", hue="variable", aspect=15, height=.5, palette=pal)
+    g = sns.FacetGrid(df, row="variable", hue="variable", aspect=8, height=1.5, palette=pal)
 
     g.map(sns.kdeplot, "value", bw_adjust=.5, clip_on=False, fill=True, alpha=1, linewidth=1.5)
     g.map(sns.kdeplot, "value", clip_on=False, color="w", lw=2, bw_adjust=.5)
@@ -84,6 +84,7 @@ def plot_pace(data, mine):
     g.set_titles("")
     g.set(yticks=[], ylabel="")
     g.despine(bottom=True, left=True)
+    plt.tight_layout()
     plt.show()
 
 
