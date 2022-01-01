@@ -1,0 +1,18 @@
+# core dependencies
+pandas
+numpy
+scipy
+
+# analysis
+notebook
+ipython
+
+# debugging
+pdbpp
+black
+flake8
+isort
+
+# vim
+pynvim
+lxml
