@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def delta2min(x):
@@ -14,6 +15,7 @@ def delta2min(x):
     out : float
     """
     return pd.Timedelta(x).total_seconds() / 60
+
 
 def ritmo2minutes(x):
     """Convert pace to minutes per kilometer.
@@ -33,7 +35,7 @@ def ritmo2minutes(x):
     return out
 
 
-def plot_hist(x, data, mine):
+def plot_hist(x, data, mine, xlabel="Minutos"):
     """Plot histogram.
 
     Parameters
@@ -43,25 +45,53 @@ def plot_hist(x, data, mine):
     fig = plt.figure(figsize=(20, 10))
 
     data[x].hist(figure=fig, bins=20, density=True)
-    plt.axvline(mine[x].item(), color="green", linewidth=3, label="Mi tiempo")
     plt.axvline(data[x].mean(), color="red", linewidth=3, label="Media")
-    plt.axvline(data[x].median(), color="red", linestyle="--", linewidth=3, label="Media")
+    plt.axvline(data[x].median(), color="red", linestyle="--", linewidth=3, label="Mediana")
+    plt.axvline(mine[x].item(), color="black", linewidth=3, label="Mi tiempo")
 
     plt.title("San Silvestre: Distribución de tiempo", fontsize=40)
-    plt.legend(fontsize=18)
+    plt.legend(fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
-    plt.xlabel("Minutos", fontsize=20)
+    plt.xlabel(xlabel, fontsize=20)
     plt.ylabel("%", fontsize=20)
 
     plt.tight_layout()
     plt.show()
 
 
+def plot_pace(data, mine):
+
+    from utils import load_data
+    data = load_data()
+    x = ["Km. 2,5 Minutos", "Km. 5 Minutos", "Km. 7,5 Minutos"]
+    df = data[x].melt()
+    pal = sns.cubehelix_palette(3, rot=-.25, light=.7)
+    g = sns.FacetGrid(df, row="variable", hue="variable", aspect=15, height=.5, palette=pal)
+
+    g.map(sns.kdeplot, "value", bw_adjust=.5, clip_on=False, fill=True, alpha=1, linewidth=1.5)
+    g.map(sns.kdeplot, "value", clip_on=False, color="w", lw=2, bw_adjust=.5)
+
+    g.refline(y=0, linewidth=2, linestyle="-", color=None, clip_on=False)
+
+    def label(x, color, label):
+        ax = plt.gca()
+        ax.text(1, .2, label, fontweight="bold", color=color, ha="right", va="center", transform=ax.transAxes)
+
+    g.map(label, "value")
+
+    g.figure.subplots_adjust(hspace=-0.25)
+    g.set_titles("")
+    g.set(yticks=[], ylabel="")
+    g.despine(bottom=True, left=True)
+    plt.show()
+
+
+
 def load_data():
 
     data = pd.read_pickle("./asset/data.pkl")
-    data["TiempoMinutos"] = data.Tiempo.apply(delta2min)
+    data["Tiempo Minutos"] = data.Tiempo.apply(delta2min)
     data["Km. 2,5 Minutos"] = data["Km. 2,5"].apply(delta2min)
     data["Km. 5 Minutos"] = data["Km. 5"].apply(delta2min)
     data["Km. 7,5 Minutos"] = data["Km. 7,5"].apply(delta2min)
