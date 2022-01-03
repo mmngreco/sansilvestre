@@ -2,6 +2,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+RITMOS = [
+    "Ritmo Min/Km. 2,5",
+    "Ritmo Min/Km. 5",
+    "Ritmo Min/Km. 7,5",
+    "Ritmo Min/Km. 10",
+]
+TIEMPOS = [
+    "Tiempo Km. 2,5 (Minutos)",
+    "Tiempo Km. 5 (Minutos)",
+    "Tiempo Km. 7,5 (Minutos)",
+    "Tiempo Km. 10 (Minutos)",
+]
+
 
 def delta2min(x):
     """Convert time duration into a minutes.
@@ -82,18 +95,17 @@ def plot_hist(
     plt.show()
 
 
-def plot_pace(data):
-
-    from utils import load_data
+def plot_grid(data, cols=RITMOS):
 
     data = load_data()
-    x = ["Km. 2,5 (Minutos)", "Km. 5 (Minutos)", "Km. 7,5 (Minutos)"]
-    df = data[x].melt()
-    pal = sns.cubehelix_palette(3, rot=-0.25, light=0.7)
+    cols = RITMOS
+    df = data[cols].melt()
+    outlier = df.value.mean() + df.value.std() * 3
+    df = df.query("value < @outlier")
+    pal = sns.cubehelix_palette(len(cols), rot=-0.25, light=0.7)
     g = sns.FacetGrid(
         df, row="variable", hue="variable", aspect=8, height=1.5, palette=pal
     )
-
     g.map(
         sns.kdeplot,
         "value",
@@ -104,7 +116,6 @@ def plot_pace(data):
         linewidth=1.5,
     )
     g.map(sns.kdeplot, "value", clip_on=False, color="w", lw=2, bw_adjust=0.5)
-
     g.refline(y=0, linewidth=2, linestyle="-", color=None, clip_on=False)
 
     def label(x, color, label):
@@ -120,12 +131,22 @@ def plot_pace(data):
             transform=ax.transAxes,
         )
 
-    g.map(label, "value")
+    def mean(x, color, label):
+        ax = plt.gca()
+        ax.axvline(x.mean(), color="white", label="Average", linewidth=4)
+        ax.axvline(x.mean(), color="black", label="Average")
+        ax.axvline(get_mine(data)[label].item(), color="white", label="Me", linewidth=4)
+        ax.axvline(get_mine(data)[label].item(), color="green", label="Me")
 
+    g.map(label, "value")
+    g.map(mean, "value")
+    get_mine(data)["Ritmo Min/Km. 10"].item()
     g.figure.subplots_adjust(hspace=-0.25)
     g.set_titles("")
     g.set(yticks=[], ylabel="")
+    g.set_xlabels("Ritmo (Minutos / Kilómetro)")
     g.despine(bottom=True, left=True)
+    plt.suptitle("Ritmo por Etapas", fontsize=30)
     plt.tight_layout()
     plt.show()
 

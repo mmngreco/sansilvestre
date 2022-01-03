@@ -20,11 +20,10 @@ import pandas as pd
 from scipy import stats
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import load_data, plot_hist, get_mine, plot_pace
+from utils import load_data, plot_hist, get_mine, plot_grid, TIEMPOS, RITMOS
 import matplotlib as mpl
 
-mpl.use('TkAgg')
-mpl.get_backend()
+mpl.use('Qt5Cairo');
 
 pd.options.display.float_format = '{:,.2f}'.format
 np.set_printoptions(precision=2)
@@ -39,7 +38,6 @@ data.head()
 #
 data.shape
 # -
-#
 #
 
 mine = get_mine(data)
@@ -72,61 +70,49 @@ f"{tiempo_all.quantile(0.2):.2f} Minutos"
 
 
 # ## Ritmo
+#
 
-ritmos = ["Ritmo Min/Km. 2,5", "Ritmo Min/Km. 5", "Ritmo Min/Km. 7,5", "Ritmo Min/Km. 10"]
-mine[ritmos]
-data[ritmos].mean()
-data[ritmos].std()
+mine[RITMOS].iloc[0]
+
+#
+data[RITMOS].mean()
+
+#
+data[RITMOS].std()
+
+# # Plot
+
+plt.ion()
+kw = {'xlabel': 'Minutos / Kilómetro', 'ylabel': 'Porcentaje (%)'}
+
+#
+
+plot_hist(RITMOS[0], data, title=RITMOS[0], **kw)
+
+#
+
+plot_hist(RITMOS[1], data, title=RITMOS[1], **kw)
+
+#
+
+plot_hist(RITMOS[2], data, title=RITMOS[2], **kw)
+
+#
+
+plot_hist(RITMOS[3], data, title=RITMOS[3], **kw)
+
+#
+
+plot_grid(data)
 
 
-# ### Categorías
-tiempos = ["Km. 2,5 (Minutos)", "Km. 5 (Minutos)", "Km. 7,5 (Minutos)", "Tiempo (Minutos)"]
-mine[ritmos].iloc[0]
+mine[TIEMPOS].iloc[0]
 categ_mine = mine["Categ."].item()
 data.query(" `Categ.` == @categ_mine ")
-data.groupby("Categ.").mean()[ritmos].sort_values(ritmos[-1])
-data.groupby("Categ.").std()[ritmos]
+data.groupby("Categ.").mean()[RITMOS].sort_values(RITMOS[-1])
+data.groupby("Categ.").std()[RITMOS]
 
 # Andando
 
 len(data[data["Ritmo Min/Km. 10"] > 13])
-
-
-
-# # Plot
-
-# plt.ion()
-# plot_hist(
-#     "Tiempo (Minutos)",
-#     data,
-#     title="Distribución del Tiempo en minutos",
-#     xlabel="Minutos",
-#     ylabel="%",
-# )
-# plot_hist(
-#     "Ritmo Km. (Minutos)",
-#     data,
-#     title="Distribución del Ritmo ",
-#     xlabel="Min/Km",
-# )
-# plot_hist("Km. 2,5 (Minutos)", data, title="")
-# plot_hist("Km. 5 (Minutos)", data, title="")
-# plot_hist("Km. 7,5 (Minutos)", data, title="")
-
-#
-
-# Cual fue la evolución de los corredores por cada etapa?
-
-# delta1 = data["Km. 5 (Minutos)"] - data["Km. 2,5 (Minutos)"]
-# delta2 = data["Km. 7,5 (Minutos)"] - data["Km. 5 (Minutos)"]
-# delta3 = data["Tiempo (Minutos)"] - data["Km. 7,5 (Minutos)"]
-#
-# delta1.div(2.5).hist(bins=20, alpha=0.5)
-# delta2.div(2.5).hist(bins=20, alpha=0.5)
-# delta3.div(2.5).hist(bins=20, alpha=0.5)
-#
-# plt.show()
-#
-#
-# plot_pace(data)
 
