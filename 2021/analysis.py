@@ -1,86 +1,132 @@
+# -*- coding: utf-8 -*-
+# ---
+# jupyter:
+#   jupytext:
+#     formats: ipynb,py,md
+#     text_representation:
+#       extension: .py
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.13.5
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# # San Silvestre 2021
+
 import pandas as pd
-import scipy.stats as stats
+from scipy import stats
+import numpy as np
+import matplotlib.pyplot as plt
+from utils import load_data, plot_hist, get_mine, plot_pace
+import matplotlib as mpl
+
+mpl.use('TkAgg')
+mpl.get_backend()
 
 pd.options.display.float_format = '{:,.2f}'.format
-%precision %.2f
-
-data = pd.read_pickle("./asset/data.pkl")
-
-
-def delta2min(x):
-    """Convert time duration into a minutes.
-
-    Parameters
-    ----------
-    x : str
-
-    Returns
-    -------
-    out : float
-    """
-    return pd.Timedelta(x).total_seconds() / 60
-
-def ritmo2minutes(x):
-    """Convert pace to minutes per kilometer.
-
-    Parameter
-    ---------
-    x : str
-        String input with a format like: 2'55"/km.
-
-    Returns
-    -------
-    out : float
-        Minutes per kilometer
-    """
-    min, sec = x.replace("/km", "").replace('"',"").split("'")
-    out = pd.Timedelta(minutes=int(min), seconds=int(sec)).total_seconds() / 60
-    return out
+np.set_printoptions(precision=2)
+# %precision %.2f
 
 
-data["TiempoMinutos"] = data.Tiempo.apply(delta2min)
-data["Km. 2,5 Minutos"] = data["Km. 2,5"].apply(delta2min)
-data["Km. 5 Minutos"] = data["Km. 5"].apply(delta2min)
-data["Km. 7,5 Minutos"] = data["Km. 7,5"].apply(delta2min)
-data["Ritmo Km. Minutos"] = data["Ritmo Km."].apply(ritmo2minutes)
+# +
 
+data = load_data()
 data.head()
-mine = data.query("Nombre=='Maximiliano Greco'")
+
+#
+data.shape
+# -
+#
+#
+
+mine = get_mine(data)
 mine
 
-# Tiempo en minutos
-mine.TiempoMinutos.item()
+# # Estadísticas
 
-# Percentil
-stats.percentileofscore(data.Minutos, mine.TiempoMinutos.item())
+tiempo_all = data["Tiempo Km. 10 (Minutos)"]
+tiempo_mine = mine["Tiempo Km. 10 (Minutos)"]
 
-# Tiempos
-data.TiempoMinutos.mean()
-data.TiempoMinutos.median()
-data.TiempoMinutos.quantile(0.2)
+# Cuánto tiempo tardé en completar la carrera?
+
+f"{tiempo_mine.item():.2f} Minutos"
+
+# De media, cuánto tardaron los corredores en completar la carrera ?
+
+f"{tiempo_all.mean():.2f} Minutos"
+
+# En qué percetil está mi tiempo ?
+
+f"{stats.percentileofscore(tiempo_all, tiempo_mine.item()):.2f}%"
+
+# Cuánto tardó el corredor mediano ?
+
+f"{tiempo_all.median():.2f} Minutos"
+
+# Cuánto tardó el corredor que tardó menos que el 80% ?
+
+f"{tiempo_all.quantile(0.2):.2f} Minutos"
 
 
-ritmos = ["Km. 2,5 Minutos", "Km. 5 Minutos", "Km. 7,5 Minutos", "Ritmo Km. Minutos"]
-data[ritmos].describe()
+# ## Ritmo
+
+ritmos = ["Ritmo Min/Km. 2,5", "Ritmo Min/Km. 5", "Ritmo Min/Km. 7,5", "Ritmo Min/Km. 10"]
 mine[ritmos]
+data[ritmos].mean()
+data[ritmos].std()
 
 
-import matplotlib.pyplot as plt
-plt.ion()
+# ### Categorías
+tiempos = ["Km. 2,5 (Minutos)", "Km. 5 (Minutos)", "Km. 7,5 (Minutos)", "Tiempo (Minutos)"]
+mine[ritmos].iloc[0]
+categ_mine = mine["Categ."].item()
+data.query(" `Categ.` == @categ_mine ")
+data.groupby("Categ.").mean()[ritmos].sort_values(ritmos[-1])
+data.groupby("Categ.").std()[ritmos]
 
-x = "TiempoMinutos"
-def plot_hist(x):
-    fig = plt.figure(figsize=(20, 10))
-    data.loc[:, x].hist(figure=fig, bins=20, density=True)
-    plt.axvline(mine.loc[:, x].item(), color="green", linewidth=3, label="Mi tiempo")
-    plt.axvline(data.loc[:, x].mean(), color="red", linewidth=3, label="Media")
-    plt.axvline(data.loc[:, x].median(), color="red", linestyle="--", linewidth=3, label="Media")
-    plt.tight_layout()
-    plt.show()
+# Andando
 
-plot_hist("TiempoMinutos")
+len(data[data["Ritmo Min/Km. 10"] > 13])
 
-plot_hist("Ritmo Km. Minutos")
-plot_hist("Km. 2,5 Minutos")
-plot_hist("Km. 5 Minutos")
-plot_hist("Km. 7,5 Minutos")
+
+
+# # Plot
+
+# plt.ion()
+# plot_hist(
+#     "Tiempo (Minutos)",
+#     data,
+#     title="Distribución del Tiempo en minutos",
+#     xlabel="Minutos",
+#     ylabel="%",
+# )
+# plot_hist(
+#     "Ritmo Km. (Minutos)",
+#     data,
+#     title="Distribución del Ritmo ",
+#     xlabel="Min/Km",
+# )
+# plot_hist("Km. 2,5 (Minutos)", data, title="")
+# plot_hist("Km. 5 (Minutos)", data, title="")
+# plot_hist("Km. 7,5 (Minutos)", data, title="")
+
+#
+
+# Cual fue la evolución de los corredores por cada etapa?
+
+# delta1 = data["Km. 5 (Minutos)"] - data["Km. 2,5 (Minutos)"]
+# delta2 = data["Km. 7,5 (Minutos)"] - data["Km. 5 (Minutos)"]
+# delta3 = data["Tiempo (Minutos)"] - data["Km. 7,5 (Minutos)"]
+#
+# delta1.div(2.5).hist(bins=20, alpha=0.5)
+# delta2.div(2.5).hist(bins=20, alpha=0.5)
+# delta3.div(2.5).hist(bins=20, alpha=0.5)
+#
+# plt.show()
+#
+#
+# plot_pace(data)
+

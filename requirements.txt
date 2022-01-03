@@ -1,11 +1,21 @@
 # core dependencies
 pandas
+lxml
 numpy
 scipy
+matplotlib
+seaborn
+altair
+altair-viewer
 
 # analysis
 notebook
 ipython
+# nbterm
+# euporie[html-mtable,images-timg]
+
+# rendering
+jupytext
 
 # debugging
 pdbpp
@@ -15,4 +25,3 @@ isort
 
 # vim
 pynvim
-lxml
