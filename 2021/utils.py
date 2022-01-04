@@ -66,9 +66,9 @@ def plot_hist(
     ----------
     x : str
     """
-    fig = plt.figure(figsize=(15, 8))
+    fig = plt.figure(figsize=(8, 4))
 
-    data[x].hist(figure=fig, bins=20, density=True)
+    data[x].hist(figure=fig, bins=20, density=True, grid=False)
 
     if decorate:
         mine = get_mine(data)
@@ -84,7 +84,10 @@ def plot_hist(
             mine[x].item(), color="black", linewidth=3, label="Mi tiempo"
         )
 
-    plt.title(title, fontsize=40)
+    ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    plt.suptitle(title, fontsize=30)
     plt.legend(fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
@@ -104,7 +107,7 @@ def plot_grid(data, cols=RITMOS):
     df = df.query("value < @outlier")
     pal = sns.cubehelix_palette(len(cols), rot=-0.25, light=0.7)
     g = sns.FacetGrid(
-        df, row="variable", hue="variable", aspect=8, height=1.5, palette=pal
+        df, row="variable", hue="variable", aspect=5, height=1.5, palette=pal
     )
     g.map(
         sns.kdeplot,
@@ -135,7 +138,12 @@ def plot_grid(data, cols=RITMOS):
         ax = plt.gca()
         ax.axvline(x.mean(), color="white", label="Average", linewidth=4)
         ax.axvline(x.mean(), color="black", label="Average")
-        ax.axvline(get_mine(data)[label].item(), color="white", label="Me", linewidth=4)
+        ax.axvline(
+            get_mine(data)[label].item(),
+            color="white",
+            label="Me",
+            linewidth=4,
+        )
         ax.axvline(get_mine(data)[label].item(), color="green", label="Me")
 
     g.map(label, "value")
@@ -155,6 +163,25 @@ def load_data():
 
     data = pd.read_pickle("./asset/data.pkl")
     data = data.reset_index(drop=True)
+
+    age = ['Júnior', 'Promesa', 'Sénior', '35', '45', '55', '65']
+    age_type = pd.CategoricalDtype(categories=age, ordered=True)
+    sex_type = pd.CategoricalDtype(categories=["F", "M"], ordered=False)
+    data["Edad"] = (
+        data["Categ."]
+        .apply(
+            lambda x: x.replace("-", "")
+            .replace("M", "")
+            .replace("F", "")
+            .strip()
+        )
+        .astype(age_type)
+    )
+    data["Sexo"] = (
+        data["Categ."]
+        .apply(lambda x: "F" if "F" in x else "M")
+        .astype(sex_type)
+    )
 
     data["Tiempo Km. 2,5 (Minutos)"] = data["Km. 2,5"].apply(delta2min)
     data["Tiempo Km. 5 (Minutos)"] = data["Km. 5"].apply(delta2min)
